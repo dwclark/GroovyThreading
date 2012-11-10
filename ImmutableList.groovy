@@ -108,8 +108,8 @@ import groovy.transform.Immutable;
     list1.eachWithIndex { item, i -> assert(item == list1Cmp[i]); };
 
     //test adding to the list
-    def list2 = list1.addAll([6, 7, 8, 9, 10]);
-    def list2Cmp = [ 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 ];
+    final def list2 = list1.addAll([6, 7, 8, 9, 10]);
+    final def list2Cmp = [ 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 ];
     list2.eachWithIndex { item, i -> assert(item == list2Cmp[i]); };
 
     //test converstion to standard JDK mutable list
@@ -119,7 +119,7 @@ import groovy.transform.Immutable;
     list2.sort().eachWithIndex { item, i -> assert(item == (i+1)); };
 
     //test sorting in reverse order to make sure sort with closure is correct
-    def list4 = list2.sort({ one, two -> two <=> one; });
+    final def list4 = list2.sort({ one, two -> two <=> one; });
     list4.eachWithIndex { item, i -> assert(item == list2Cmp[i]); };
 
     //test find method

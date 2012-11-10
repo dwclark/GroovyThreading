@@ -32,16 +32,16 @@ assert(new Address(street: '123 Main Street', city: 'Frisco', state: 'TX').toStr
 
 //hashCode() also works as expected, immutable values make good key
 //candidates for maps
-final fmt = 'MM/dd/yyyy';
-final mcenroe = new Person(new Name('John', null, 'McEnroe'), null,
+final def fmt = 'MM/dd/yyyy';
+final def mcenroe = new Person(new Name('John', null, 'McEnroe'), null,
 			   Date.parse(fmt, '02/16/1959'), null)
-def map = [ (mcenroe): 'Rugby', (mcenroe): 'Tennis' ];
+final def map = [ (mcenroe): 'Rugby', (mcenroe): 'Tennis' ];
 assert(map.size() == 1);
 assert(map[mcenroe] == 'Tennis');
 
-def kids = [ new Person(new Name('Sally', 'L', 'Bloggs'), null, Date.parse(fmt, '1/1/1980'), null),
-	     new Person(new Name('Joe', 'P', 'Bloggs'), null, Date.parse(fmt, '1/1/1982'), null) ];
-def mom = new Person(new Name('Mrs', null, 'Bloggs'), null, null, kids);
+final def kids = [ new Person(new Name('Sally', 'L', 'Bloggs'), null, Date.parse(fmt, '1/1/1980'), null),
+		   new Person(new Name('Joe', 'P', 'Bloggs'), null, Date.parse(fmt, '1/1/1982'), null) ];
+final def mom = new Person(new Name('Mrs', null, 'Bloggs'), null, null, kids);
 assert(kids == mom.children);
 
 //Uncomment to see error

@@ -1,53 +1,9 @@
-import groovy.transform.ThreadInterrupt;
-import java.util.concurrent.Callable;
-
-@ThreadInterrupt
-public class LongRunning {
-  
-  static def one() {
-    int i = 0;
-    for(;;) {
-      i = i+1;
-    }
-
-    return i;
-  }
-
-  static def two() {
-    double x = 1.0d;
-    while(true) {
-      x = x * 1.5;
-    }
-
-    return x;
-  }
-}
-
-public class Interrupts {
-  static guard(Closure closure) {
-    try {
-      return closure();
-    }
-    catch(InterruptedException ie) {
-      Thread.currentThread().interrupt();
-    }
-  }
-
-  static Runnable runnable(def closure) {
-    return { -> guard(closure); } as Runnable;
-  }
-
-  static Callable callable(def closure) {
-    return { -> return guard(closure); } as Callable;
-  }
-}
-
-//set up a long running task that is interruptible,
-//but make sure to guard the interruption
-def t1 = new Thread(Interrupts.runnable(LongRunning.&one));
+long i = 0;
+def t1 = new Thread(Interrupts.runnable({ -> ++i; }, Interrupts.defaultCondition,
+					{ -> println('I got interrupted'); }));
 t1.start();
-
-//wait for signal to stop thread t1
+	
+//It is now unsafe for any thread, other than t1 to access i	    
 def console = System.console();
 def nextInput = {
   print("Please enter the next command, or 'stop' to terminate: ");
@@ -57,3 +13,22 @@ while(nextInput() != 'stop') { }
 //interrupt t1 and wait for it to complete
 t1.interrupt();
 t1.join();
+
+//it is now safe to access i from this thread 
+println(i);
+
+short s = 0;
+boolean completed = false;
+def t2 = new Thread(Interrupts.runnable({ -> ++s; }, { -> s >= 0 },
+					{ -> println('I got interrupted'); },
+					{ -> completed = true; }));
+t2.start();
+
+//it is now unsafe for any thread, other than t2 to access s and completed
+while(nextInput() != 'stop') { }
+
+t2.interrupt(); //should have no effect
+t2.join();
+
+//it is now safe to access s and completed
+println("s: ${s}, completed: ${completed}");

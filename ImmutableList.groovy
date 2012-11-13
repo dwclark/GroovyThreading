@@ -2,85 +2,82 @@ import groovy.transform.Immutable;
 
 @Immutable public class ImmutableList {
 
-  Cell head;
+  private final data;
+  public getData() { return data; }
+
+  ImmutableList next;
+  private static final ImmutableList nullList = new ImmutableList(data: null);
 
   public boolean equals(Object list) {
     if(!(list instanceof ImmutableList)) return false;
     if(this.size() != list.size()) return false;
     
-    Cell current = head;
-    while(current.next) {
+    ImmutableList current = this;
+    while(!current.is(nullList)) {
       if(!list.any { item -> item == current.data; }) return false;
       else current = current.next;
     }
 
-    return list.any { item -> item == current.data; };
+    return true;
   }
+
+  public static ImmutableList newList() { return nullList; }
 
   public static ImmutableList newList(final data) {
-    new ImmutableList(new Cell(data: data, next: null));
+    new ImmutableList(data: data, next: nullList);
   }
 
-  public static ImmutableList newList(Collection objs) {
-    def iter = objs.iterator();
-    def newHead = new Cell(data: iter.next(), next: null);
-    while(iter.hasNext()) {
-      def tmp = new Cell(data: iter.next(), next: newHead);
-      newHead = tmp;
-    }
+  public static ImmutableList newList(Collection col) {
+    if(!col) return nullList;
 
-    new ImmutableList(newHead);
+    ImmutableList next = nullList;
+    col.each { obj -> next = new ImmutableList(data: obj, next: next); };
+    return next;
   }
 
   public ImmutableList add(final def data) {
-    final newHead = new Cell(data: data, next: head);
-    new ImmutableList(newHead);
+    return new ImmutableList(data: data, next: this);
   }
   
   public ImmutableList addAll(final def collection) {
-    Cell newHead = head;
-    collection.each { data -> 
-      Cell tmp = new Cell(next: newHead, data: data);
-      newHead = tmp; };
-    new ImmutableList(newHead);
+    ImmutableList next = this;
+    collection.each { obj -> next = new ImmutableList(data: obj, next: next); };
+    return next;
   }
   
-  public Object pop() { head.next; }
-  public ImmutableList push(final data) { add(data); }
-
   public ImmutableList reverse() {
-    new ImmutableList(null).addAll(this);
+    return nullList.addAll(this);
   }
 
   public ImmutableList remove(final Object obj) {
-    Cell found = findCell { it == obj; };
-    if(!found) return this;
+    ImmutableList found = findList { it == obj; };
+    if(found.is(nullList)) return this;
     
-    Cell newLast = found.next;
-    Cell current = head;
+    ImmutableList head = found.next;
+    ImmutableList current = this;
     while(!current.is(found)) {
-      newLast = new Cell(next: newLast, data: current.data);
+      head = new ImmutableList(next: head, data: current.data);
       current = current.next;
     }
     
-    return new ImmutableList(newLast);
+    return head;
   }
 
   public ImmutableList removeAll(final def collection) {
-    Cell found = lastCellMatching(collection);
-    if(!found) return this;
+    ImmutableList found = lastListMatching(collection);
+    if(found.is(nullList)) return this;
 
-    Cell newLast = found.next;
-    Cell current = head;
+    ImmutableList head = found.next;
+    ImmutableList current = this;
     while(!current.is(found)) {
       if(!collection.any { item -> item == current.data; }) {
-	newLast = new Cell(next: newLast, data: current.data);
+	head = new ImmutableList(next: head, data: current.data);
       }
       
       current = current.next;
     }
 
-    return new ImmutableList(newLast);
+    return head;
   }
 
   public List toMutableList() {
@@ -94,34 +91,29 @@ import groovy.transform.Immutable;
   }
 
   public void eachWithIndex(Closure closure) {
-    Cell current = head;
+    ImmutableList current = this;
     int index = 0;
-    while(current.next) {
+    while(!current.is(nullList)) {
       closure(current.data, index++);
       current = current.next;
     }
-
-    closure(current.data, index++);
   }
 
-  private void eachCell(Closure closure) {
-    Cell current = head;
-    int index = 0;
-    while(current.next) {
+  private void eachList(Closure closure) {
+    ImmutableList current = this;
+    while(!current.is(nullList)) {
       closure(current);
       current = current.next;
     }
-
-    closure(current);
   }
 
-  private Cell lastCellMatching(final def collection) {
-    Cell last = null;
-    eachCell { cell ->
-      if(collection.any { item -> item == cell.data; }) {
-	last = cell;
+  private ImmutableList lastListMatching(final def collection) {
+    ImmutableList last = nullList;
+    eachList { list ->
+      if(collection.any { item -> item == list.data; }) {
+	last = list;
       } };
-
+    
     return last;
   }
 
@@ -131,20 +123,25 @@ import groovy.transform.Immutable;
 
   public boolean every(Closure closure) {
     boolean ret = true;
-    Cell current = head;
-    while(current.next) {
+    ImmutableList current = this;
+    while(!current.is(nullList)) {
       ret = ret && closure(current.data);
       if(!ret) return false;
       else current = current.next;
     }
 
-    return closure(current.data);
+    return true;
   }
 
   public int size() {
-    int ret;
-    eachWithIndex { item, i -> ret = i; };
-    return ret + 1;
+    int ret = 0;
+    ImmutableList current = this;
+    while(!current.is(nullList)) {
+      current = current.next;
+      ++ret;
+    }
+
+    return ret;
   }
 
   public ImmutableList sort() {
@@ -155,40 +152,35 @@ import groovy.transform.Immutable;
     return newList(toMutableList().sort(closure).reverse());
   }
 
-  public Cell findCell(Closure closure) {
-    Cell current = head;
-    while(current.next) {
+  public ImmutableList findList(Closure closure) {
+    ImmutableList current = this;
+    while(!current.is(nullList)) {
       if(closure(current.data)) return current;
       current = current.next;
     }
-    
-    if(closure(current.data)) return current;
-    return null;
+
+    return nullList;
   }
 
   public Object find(Closure closure) {
-    return findCell(closure)?.data;
+    return findList(closure).data;
   }
 
   public ImmutableList findAll(Closure closure) {
-    Cell current = null;
+    ImmutableList current = nullList;
     each { obj ->
       if(closure(obj)) {
-	if(current) {
-	  Cell newCell = new Cell(data: obj, next: current);
-	  current = newCell;
-	}
-	else current = new Cell(data: obj, next: null);
+	current = new ImmutableList(data: obj, next: current);
       } };
-
-    new ImmutableList(head: current);
+    
+    return current;
   }
 
   public String join(final String separator) {
     StringBuilder sb = new StringBuilder();
-    eachCell { cell ->
-      sb.append(cell.data.toString());
-      if(cell.next) sb.append(separator); };
+    eachList { list ->
+      sb.append(list.data.toString());
+      if(!list.next.is(nullList)) sb.append(separator); };
     return sb.toString();
   }
 
@@ -233,6 +225,7 @@ import groovy.transform.Immutable;
 	   ImmutableList.newList([ 6, 5, 4, 3, 1, 2 ]));
     assert(ImmutableList.newList([ 1, 2, 3, 4, 5 ]) !=
 	   ImmutableList.newList([ 6, 5, 4, 3, 1, 2 ]));
+    assert(ImmutableList.newList() == ImmutableList.newList());
 
     //test remove
     final listNo9 = list2.remove(9);
@@ -248,6 +241,9 @@ import groovy.transform.Immutable;
     //test removeAll
     final def listNo567 = list2.removeAll([5,6,7]);
     assert(listNo567.size() == 7);
+    assert(list2.removeAll([1,2,3,4,5,6,7,8,9,10]) == ImmutableList.newList());
+
+    //test join
     assert(listNo567.join(',') == '8,9,10,4,3,2,1');
   }
 }

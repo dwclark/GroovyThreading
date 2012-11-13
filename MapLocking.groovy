@@ -86,7 +86,7 @@ public class MapTester {
   }
 
   public static Thread run(MapTester theMap) {
-    def t = new Thread(Interrupts.runnable({ -> theMap.runTest(); }));
+    def t = new Thread(Interrupts.runnable(work: { -> theMap.runTest(); }));
     t.start();
     return t;
   }

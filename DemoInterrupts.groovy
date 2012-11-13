@@ -1,6 +1,6 @@
 long i = 0;
-def t1 = new Thread(Interrupts.runnable({ -> ++i; }, Interrupts.defaultCondition,
-					{ -> println('I got interrupted'); }));
+def t1 = new Thread(Interrupts.runnable(work: { -> ++i; },
+					onInterrupt: { -> println('I got interrupted'); }));
 t1.start();
 	
 //It is now unsafe for any thread, other than t1 to access i	    
@@ -19,9 +19,10 @@ println(i);
 
 short s = 0;
 boolean completed = false;
-def t2 = new Thread(Interrupts.runnable({ -> ++s; }, { -> s >= 0 },
-					{ -> println('I got interrupted'); },
-					{ -> completed = true; }));
+def t2 = new Thread(Interrupts.runnable(work: { -> ++s; },
+					condition: { -> s >= 0 },
+					onInterrupt: { -> println('I got interrupted'); },
+					onEnd: { -> completed = true; }));
 t2.start();
 
 //it is now unsafe for any thread, other than t2 to access s and completed

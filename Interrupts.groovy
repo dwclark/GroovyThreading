@@ -4,10 +4,12 @@ public class Interrupts {
   static final defaultOnInterrupt = { -> };
   static final defaultOnEnd = { -> };
   
-  static guarded(final def work,
-		 final def condition = defaultCondition,
-		 final def onInterrupt = defaultOnInterrupt,
-		 final def onEnd = defaultOnEnd) {
+  static guarded(final def args) {
+    final def work = args.work;
+    final def condition = args.condition ?: defaultCondition;
+    final def onInterrupt = args.onInterrupt ?: defaultOnInterrupt;
+    final def onEnd = args.onEnd ?: defaultOnEnd;
+
     while(!Thread.currentThread().interrupted && condition()) {
       try {
 	work();
@@ -24,10 +26,7 @@ public class Interrupts {
     onEnd();
   }
 
-  static Runnable runnable(final def work, 
-			   final def condition = defaultCondition,
-			   final def onInterrupt = defaultOnInterrupt,
-			   final def onEnd = defaultOnEnd) {
-    return { -> guarded(work, condition, onInterrupt, onEnd); } as Runnable;
+  static Runnable runnable(final def args) {
+    return { -> guarded(args); } as Runnable;
   }
 }

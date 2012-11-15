@@ -1,3 +1,5 @@
+import groovyx.gpars.*;
+
 Integrate.installToMath();
 
 //demonstrate integration strategies
@@ -21,3 +23,4 @@ println(Math.integrate(lower: 0.0d, upper: Math.PI, steps: 2000,
 		       func: Math.&sin as SingleFunc));
 println(Math.integrateParallel(lower: 3, upper: 7, pool: pool,
 			       steps: 2000, func: { double x -> return x * x } as SingleFunc));
+

@@ -24,15 +24,15 @@ def hashFile(File file) {
 }
 
 def map1 = [:];
-def time5 = Timing.millis {
+def time3 = Timing.millis {
   dir.eachFileParallel(fileProcessor: { File file -> return hashFile(file); },
 		       accumulator: { def file, def result -> map1[file.path] = result }); };
-println("Multi Threaded SHA-1 hash in ${time5} millis");
+println("Multi Threaded SHA-1 hash in ${time3} millis");
 
 def map2 = [:];
-def time6 = Timing.millis {
+def time4 = Timing.millis {
   dir.eachFileRecurse { File file -> if(file.file) map2[file.path] = hashFile(file); }; };
-println("Single Threaded SHA-1 hash in ${time6} millis");
+println("Single Threaded SHA-1 hash in ${time4} millis");
 
 def hasNewLines(File file) {
   def is = file.newInputStream();
@@ -43,18 +43,18 @@ def hasNewLines(File file) {
       return true;
     }
   }
-
+  
   is.close();
   return false;
 }
 
 def numNewLines1 = 0;
-def time7 = Timing.millis {
+def time5 = Timing.millis {
   dir.eachFileParallel(fileProcessor: { File file -> return hasNewLines(file); },
 		       accumulator: { def file, def result -> if(result) ++numNewLines1; }) };
-println("Multi Threaded Total files with new lines: ${numNewLines1}, time: ${time7}");
+println("Multi Threaded Total files with new lines: ${numNewLines1}, time: ${time5}");
 
 def numNewLines2 = 0;
-def time8 = Timing.millis {
+def time6 = Timing.millis {
   dir.eachFileRecurse { File file -> if(file.file && hasNewLines(file)) ++numNewLines2; }; };
-println("Single Threaded Total files with new lines: ${numNewLines2}, time: ${time8}");
+println("Single Threaded Total files with new lines: ${numNewLines2}, time: ${time6}");

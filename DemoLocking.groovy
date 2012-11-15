@@ -2,15 +2,6 @@ import groovy.transform.Immutable;
 import groovy.transform.WithReadLock;
 import groovy.transform.WithWriteLock;
 
-@Immutable
-public class MapPair {
-  private final Object key;
-  public Object getKey() { return key; }
-  
-  private final Object value;
-  public Object getValue() { return value; }
-}
-
 public class BaseMap {
   private List list = [];
   

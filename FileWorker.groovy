@@ -1,15 +1,22 @@
 import groovyx.gpars.actor.*;
 
 public class FileWorker extends DynamicDispatchActor {
-  final def fileProcessor;
+  final Closure fileProcessor;
+  final FileManager manager;
 
-  public void onMessage(RqDirScan rq) {
-    final dirs = rq.dir.listFiles().findAll { it.directory; };
-    final files = rq.dir.listFiles().findAll { it.file; };
-    sender.send(new RsDirScan(dirs: dirs, files: files));
+  public FileWorker(FileManager manager, Closure fileProcessor) {
+    this.manager = manager;
+    this.fileProcessor = fileProcessor;
   }
 
-  public void onMessage(RqProcessFile rq) {
-    sender.send(fileProcessor(rq.file));
+  public void onMessage(RqProcessDir rq) {
+    final dirs = rq.dir.listFiles().findAll { it.directory; };
+    if(dirs) {
+      manager << new FoundSubDirs(dirs: dirs);
+    }
+    
+    def list = rq.dir.listFiles().findAll { it.file; }.inject([]) { list, file ->
+      list += new MapPair(key: file, value: fileProcessor(file)); list; };
+    manager << new RsProcessDir(results: list);
   }
 }

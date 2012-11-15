@@ -6,12 +6,12 @@ import static groovyx.gpars.dataflow.Dataflow.task;
 public class Integrate {
   
   @CompileStatic
-  public static double calculateDelta(double lower, double upper, int steps) {
+  public static double calculateDelta(final double lower, final double upper, final int steps) {
     return (upper - lower) / steps;
   }
 
   @CompileStatic
-  public static double rectangular(double lower, double upper, int steps, SingleFunc func) {
+  public static double rectangular(final double lower, final double upper, final int steps, final SingleFunc func) {
     final double delta = calculateDelta(lower, upper, steps);
     double nextLower = lower;
     double sum = 0.0d;
@@ -24,7 +24,7 @@ public class Integrate {
   }
 
   @CompileStatic
-  public static double trapezoidal(double lower, double upper, int steps, SingleFunc func) {
+  public static double trapezoidal(final double lower, final double upper, final int steps, final SingleFunc func) {
     final double delta = calculateDelta(lower, upper, steps);
     double nextLower = lower;
     double sum = 0.0d;
@@ -42,9 +42,9 @@ public class Integrate {
   }
 
   @CompileStatic
-  public static double execute(double lower, double upper, int steps,
-			       SingleFunc func,
-			       IntegrationStrategy strategy = IntegrationStrategy.RECTANGULAR) {
+  public static double execute(final double lower, final double upper, final int steps,
+			       final SingleFunc func,
+			       final IntegrationStrategy strategy = IntegrationStrategy.RECTANGULAR) {
 
     if(strategy == IntegrationStrategy.RECTANGULAR) {
       return rectangular(lower, upper, steps, func);

@@ -12,7 +12,7 @@ public class FileManager extends DynamicDispatchActor {
     this.accumulator = args.accumulator;
     processDirRqs.add(new RqProcessDir(dir: args.startAt));
     (0..<args.numWorkers).each { 
-      workers.push(new FileWorker(this, args.fileProcessor).start()); };
+      workers.push(new FileWorker(args.fileProcessor).start()); };
   }
 
   private void runTasks(boolean canStop = false){

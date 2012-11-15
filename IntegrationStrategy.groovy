@@ -1,0 +1,1 @@
+public enum IntegrationStrategy { RECTANGULAR, TRAPEZOIDAL };

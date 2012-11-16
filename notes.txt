@@ -1,0 +1,57 @@
+General Notes
+
+1) Immutability is a huge win for mulit-threaded and concurrent programming.  Anything that can be made immutable should be made immutable.
+
+2) Even things that may not appear immutable, may be amenable to being made immutable.  In my initial version of the Integrate class, I used a mutable variable that caused a nasty race condition in the code.  Thinking a little harder, it was possible to replace the mutable variable with a computation done in each loop.  Had I made everything immutable, I would have never seen this problem and I would have saved some serious debugging time.
+
+3) Multi-threaded programming is very succeptible to Heisenbugs, bugs that disappear once you add instrumentation or attach a debugger.  Be prepared to do more thinking and less exploring with multi-threaded programming.
+
+4) Read Java Concurrency in Practice by Brian Goetz.  Then read it again.  Knowing the Java Memory Model dispels a lot of the mystery in best practices for concurrent Java program.
+
+5) There is a lot of overlap in what each strategy can provide, and sometimes it is not obvious which strategy you should choose.  For example the Integrate class could have easily been written using parallel collections, even though I used dataflow variables.  But, things are not always interchangable, using Actors for the Integrate class would probably be a bad idea.
+
+6) Performance in multi-threaded programming can be frustrating.  Often serial programs can perform better than well-designed parallel programs in real world situations.
+
+7) Because of this, using something like GPars should probably mostly be motivated by considerations of good program design and allowing for clean and maintainable code.
+
+Immutability Notes
+
+1) Lots of things that seem to need mutability really don't.  See for example the ImmutableList.  It has both add and remove functionality, but nothing ever changes.
+
+2) Groovy programmers can learn a lot from Scala and Clojure programmers in what can be immutable.
+
+Dataflow Variables
+
+1) Are a simplification of Java Futures
+
+2) Are excellent for when tasks have complex dependencies, but still need to be parallelized.  They can really help keep code robust.  Hard coding dependencies leads to brittle and hard to manage code.  It's better to code things as simple tasks and let the dataflow framework work out the dependencies automatically.
+
+3) The main idea is that dataflow variables can only be written to once, but read from many times.  All reads block until the variable is written to.
+
+Actors
+
+1) Are great at managing tasks independently of threads.  For example, you might have many times more actors being run than there are threads in the underlying pool.
+
+2) Are excellent a modelling problems that can be thought of as Master/Slave or Manager/Workers problems.
+
+3) Provide isolated mutability by forcing actors to interact with each other by passing messages.  Each actor can maintain as much mutable state as they want, but that mutable state should not be shared with other actors, unless done by message passing.
+
+4) Messages passed in actor frameworks should be immutable.
+
+5) Messages passed don't have to be immutable, but each actor should striclty enforce a "hands off" policy once a message is sent that contains immutable data.  The actors framework does provide enough synchronization to guarantee that the Java Memory Model is not violated.
+
+6) Beware of chatty protocols.  Each message sent may result in a context switch which is costly.
+
+7) In a Manager/Worker scenario, the Manager should maintain all state 
+
+8) Recursive problems can be modelled using actors using a Manager/Worker design where the master maintains a stack for managing state.
+
+Parallel Collections/Arrays
+
+1) Are probably the simplest to understand of all the concurrency frameworks inside GPars.
+
+2) However, the parallel operations are not a panacea.  Under real world conditions, it's easily possible that parallel algorithms will perform worse than serial algorithms.  For example, if you are trying to sort a list with a couple thousand items in it, don't even bother with parallel collections.  By the time a parallel algorithm can set up its machinery and divide up the work, the serial algorithm will be done.
+
+3) If performance is your primary consideration in using parallel collections/arrays, you will probably need a good understanding of your problem domain and a good understanding of the underlying Fork/Join machinery to get optimal performance.  However, this is the future of high performance java.  Because Java doesn't have lambdas, the Fork/Join framework is not that useful inside of Java 7.  However, because closures are lambdas, you can do the stuff slated for Java 8 right now inside of Groovy.
+
+4) Still good for some operations.  For example, if you have a series of operations you want to run in parallel and block until they are complete, it's a lot easier to run them inside of eachParallel or collectParallel than it is to bother with Runnables, Callables, Futures, etc.

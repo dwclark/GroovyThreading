@@ -33,7 +33,7 @@ public abstract class TaskDivider {
     (TaskDivider) getClass().getDeclaredConstructor(conArgs).newInstance(lower, midpoint, indexable, closure);
   }
 
-  public abstract Object doSequential();
+  public abstract void doSequential();
   public void joinTasks(TaskDivider lower, TaskDivider upper) { }
 }
 
@@ -43,12 +43,10 @@ public class FJFill extends TaskDivider {
     super(lower, upper, indexable, closure);
   }
 
-  public Object doSequential() {
+  public void doSequential() {
     for(int i = lower; i < upper; ++i) {
       indexable[i] = closure(i);
     }
-
-    return null;
   }
 }
 
@@ -60,19 +58,46 @@ public class FJMax extends TaskDivider {
 
   def max;
 
-  public Object doSequential() {
+  public void doSequential() {
     max = indexable[lower];
     for(int i = (lower+1); i < upper; ++i) {
       def toCmp = indexable[i];
       if(max < toCmp) max = toCmp;
     }
-    
-    return max;
   }
 
   @Override public void joinTasks(TaskDivider lowerTask, TaskDivider upperTask) {
     if(lowerTask.max < upperTask.max) max = upperTask.max;
     else max = lowerTask.max;
+  }
+}
+
+public class FJFindAll extends TaskDivider {
+  public FJFindAll(Map args) { super(args); }
+  public FJFindAll(int lower, int upper, Object indexable, Object closure) {
+    super(lower, upper, indexable, closure);
+  }
+
+  def found;
+
+  public void doSequential() {
+    for(int i = lower; i < upper; ++i) {
+      def item = indexable[i];
+      if(closure(item)) {
+	if(found == null) found = [];
+	found.add(item);
+      }
+    }
+  }
+
+  @Override public void joinTasks(TaskDivider lowerTask, TaskDivider upperTask) {
+    if(!lowerTask.found && !upperTask.found) return;
+    else if(lowerTask.found && !upperTask.found) found = lowerTask.found;
+    else if(!lowerTask.found && upperTask.found) found = upperTask.found;
+    else {
+      found = new ArrayList(lowerTask.found);
+      found.addAll(upperTask.found);
+    }
   }
 }
 
@@ -108,17 +133,24 @@ public class FJUtils {
     }; };
 
   public static ForkJoinPool pool() { return tlPool.get(); }
+  public static final int THRESHOLD = 2000;
 
   public static Object runFill(def indexable, def closure) {
     def fr = new FJFill(0, indexable.size(), indexable, closure);
-    pool().invoke(new FJTask(fr, 2000));
+    pool().invoke(new FJTask(fr, THRESHOLD));
     return indexable;
   }
 
   public static Object runMax(def indexable) {
     def fmax = new FJMax(0, indexable.size(), indexable, null);
-    pool().invoke(new FJTask(fmax, 2000));
+    pool().invoke(new FJTask(fmax, THRESHOLD));
     return fmax.max;
+  }
+
+  public static Object runFindAll(def indexable, def closure) {
+    def fall = new FJFindAll(0, indexable.size(), indexable, closure);
+    pool().invoke(new FJTask(fall, THRESHOLD));
+    return fall.found;
   }
 
   public static void installEnhanced() {
@@ -127,6 +159,9 @@ public class FJUtils {
 
     java.lang.Object.metaClass.myParallelMax = { ->
       return runMax(delegate); };
+
+    java.lang.Object.metaClass.myParallelFindAll = { def closure ->
+      return runFindAll(delegate, closure); };
   }
 }
 
@@ -165,10 +200,9 @@ println('Parallel #3: ' + Timing.millis { pool.invoke(new FJTask(fmax, 2000)); }
 println('Parallel #4: ' + Timing.millis { pool.invoke(new FJTask(fmax, 2000)); });
 println('Sequential #1: ' + Timing.millis { fmax.doSequential(); });
 println('Sequential #2: ' + Timing.millis { fmax.doSequential(); });
-assert(fmax.max == fmax.doSequential());
 println();
 
-def strArray = new String[100_000];
+def strArray = new String[200_000];
 final def randomStr = { int i -> return RandomString.next(ThreadLocalRandom.current(), 20) };
 def fr2 = new FJFill(lower: 0, upper: strArray.length, indexable: strArray,
 		     closure: randomStr);
@@ -192,3 +226,8 @@ myTime = Timing.millis {
   max = intArray.myParallelFill(randomInt).myParallelMax(); };
 println("Populated array and found ${max} as max in ${myTime} millis");
 println("Max string: " + strArray.myParallelFill(randomStr).myParallelMax());
+
+println('Parallel Find All #1: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });
+println('Parallel Find All #2: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });
+println('Parallel Find All #3: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });
+println('Parallel Find All #4: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });

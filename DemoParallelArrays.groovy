@@ -3,9 +3,12 @@ import groovyx.gpars.extra166y.Ops;
 
 def randomString = new RandomString();
 def ary = new ArrayList(200_000);
+def primitiveAry = new String[200_000];
 
 for(int i = 0; i < 200_000; ++i) {
-  ary[i] = randomString.next(20);
+  def str = randomString.next(20);
+  ary[i] = str;
+  primitiveAry[i] = str;
 }
 
 def zzzListP, zzzListPA;
@@ -13,6 +16,12 @@ def filter = { it.startsWith('zzz'); };
 final def o = System.out;
 int pSize, paSize;
 GParsPool.withPool {
+
+  o.format("Parallel Primitive #1: %,16d\n", Timing.nanos { zzzListP = primitiveAry.findAllParallel(filter); });
+  o.format("Parallel Primitive #2: %,16d\n", Timing.nanos { zzzListP = primitiveAry.findAllParallel(filter); });
+  o.format("Parallel Primitive #3: %,16d\n", Timing.nanos { zzzListP = primitiveAry.findAllParallel(filter); });
+  o.format("Parallel Primitive #4: %,16d\n", Timing.nanos { zzzListP = primitiveAry.findAllParallel(filter); });
+
   o.format("Parallel Cols #1: %,21d\n", Timing.nanos { zzzListP = ary.findAllParallel(filter); });
   o.format("Parallel Cols #2: %,21d\n", Timing.nanos { zzzListP = ary.findAllParallel(filter); });
   o.format("Parallel Cols #3: %,21d\n", Timing.nanos { zzzListP = ary.findAllParallel(filter); });

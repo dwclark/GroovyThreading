@@ -169,8 +169,9 @@ assert(fmax.max == fmax.doSequential());
 println();
 
 def strArray = new String[100_000];
+final def randomStr = { int i -> return RandomString.next(ThreadLocalRandom.current(), 20) };
 def fr2 = new FJFill(lower: 0, upper: strArray.length, indexable: strArray,
-		     closure: { int i -> return RandomString.next(ThreadLocalRandom.current(), 20); });
+		     closure: randomStr);
 println("***** Timing for random strings *****");
 println('Parallel #1: ' + Timing.millis { pool.invoke(new FJTask(fr2, 1000)); });
 println('Parallel #2: ' + Timing.millis { pool.invoke(new FJTask(fr2, 1000)); });
@@ -190,3 +191,4 @@ myTime = Timing.millis {
 myTime = Timing.millis {
   max = intArray.myParallelFill(randomInt).myParallelMax(); };
 println("Populated array and found ${max} as max in ${myTime} millis");
+println("Max string: " + strArray.myParallelFill(randomStr).myParallelMax());

@@ -1,3 +1,5 @@
+import groovy.transform.CompileStatic;
+
 public class RandomString {
   Random random;
 
@@ -9,9 +11,13 @@ public class RandomString {
     return next(random, size);
   }
 
+  @CompileStatic
   public static String next(Random random, int size) {
-    StringBuilder sb = new StringBuilder(size);
-    size.times { sb.append((char) random.nextInt(26) + 97); };
-    return sb.toString();
+    char[] ary = new char[size];
+    for(int i = 0; i < ary.length; ++i) {
+      Character.toChars(random.nextInt(26) + 97, ary, i);
+    }
+    
+    return new String(ary);
   }
 }

@@ -1,4 +1,5 @@
 import java.util.concurrent.*;
+import java.lang.reflect.Constructor;
 import groovy.transform.CompileStatic;
 
 @CompileStatic
@@ -9,49 +10,53 @@ public abstract class TaskDivider {
   protected final def closure;
 
   public TaskDivider(Map args) {
-    this.lower = (int) args.get('lower');
-    this.upper = (int) args.get('upper');
-    this.indexable = args.get('indexable');
-    this.closure = args.get('closure');
+    this((int) args.lower, (int) args.upper, args.indexable, args.closure);
   }
+
+  public TaskDivider(int lower, int upper, Object indexable, Object closure) {
+    this.lower = lower;
+    this.upper = upper;
+    this.indexable = indexable;
+    this.closure = closure;
+  }
+
+  public static final Class[] conArgs = [ int, int, Object, Object ] as Class[];
 
   public int getSize() { return upper - lower; }
   public int getMidpoint() { return lower + ((int) (size / 2)); }
   
-  public Map getLowerArgs() {
-    return [ lower: lower, upper: midpoint, indexable: indexable, closure: closure ];
-  }
-
-  public Map getUpperArgs() {
-    return [ lower: midpoint, upper: upper, indexable: indexable, closure: closure ];
-  }
-  
   public TaskDivider getUpperTask() {
-    (TaskDivider) getClass().getDeclaredConstructor(Map).newInstance(upperArgs);
+    (TaskDivider) getClass().getDeclaredConstructor(conArgs).newInstance(midpoint, upper, indexable, closure);
   }
 
   public TaskDivider getLowerTask() {
-    (TaskDivider) getClass().getDeclaredConstructor(Map).newInstance(lowerArgs);
+    (TaskDivider) getClass().getDeclaredConstructor(conArgs).newInstance(lower, midpoint, indexable, closure);
   }
 
   public abstract Object doSequential();
   public void joinTasks(TaskDivider lower, TaskDivider upper) { }
 }
 
-public class FillRandom extends TaskDivider {
-  public FillRandom(Map args) { super(args); }
+public class FJFill extends TaskDivider {
+  public FJFill(Map args) { super(args); }
+  public FJFill(int lower, int upper, Object indexable, Object closure) {
+    super(lower, upper, indexable, closure);
+  }
 
   public Object doSequential() {
     for(int i = lower; i < upper; ++i) {
-      indexable[i] = closure();
+      indexable[i] = closure(i);
     }
 
     return null;
   }
 }
 
-public class FindMax extends TaskDivider {
-  public FindMax(Map args) { super(args); }
+public class FJMax extends TaskDivider {
+  public FJMax(Map args) { super(args); }
+  public FJMax(int lower, int upper, Object indexable, Object closure) {
+    super(lower, upper, indexable, closure);
+  }
 
   def max;
 
@@ -96,10 +101,43 @@ public class FJTask extends RecursiveAction {
   }
 }
 
+public class FJUtils {
+  private static final ThreadLocal tlPool = new ThreadLocal() {
+    @Override protected Object initialValue() {
+      return new ForkJoinPool();
+    }; };
+
+  public static ForkJoinPool pool() { return tlPool.get(); }
+
+  public static Object runFill(def indexable, def closure) {
+    def fr = new FJFill(0, indexable.size(), indexable, closure);
+    pool().invoke(new FJTask(fr, 2000));
+    return indexable;
+  }
+
+  public static Object runMax(def indexable) {
+    def fmax = new FJMax(0, indexable.size(), indexable, null);
+    pool().invoke(new FJTask(fmax, 2000));
+    return fmax.max;
+  }
+
+  public static void installEnhanced() {
+    java.lang.Object.metaClass.myParallelFill = { def closure ->
+      return runFill(delegate, closure); };
+
+    java.lang.Object.metaClass.myParallelMax = { ->
+      return runMax(delegate); };
+  }
+}
+
+FJUtils.installEnhanced();
+
+def intArray = new int[300_000];
 def pool = new ForkJoinPool();
-def fr = new FillRandom(lower: 0, upper: 300_000, indexable: new int[300_000],
-			closure: { -> ThreadLocalRandom.current().nextInt(1, 500_001); });
-def fmax = new FindMax(lower: 0, upper: 300_000, indexable: fr.indexable);
+final def randomInt = { int i -> ThreadLocalRandom.current().nextInt(1, 500_001); };
+def fr = new FJFill(lower: 0, upper: intArray.length, indexable: intArray,
+		    closure: randomInt);
+def fmax = new FJMax(lower: 0, upper: intArray.length, indexable: intArray);
 
 //Note, the start up times for the fork/join framework are horrendous
 //The nature of the speed up suggests that this speedup is due to
@@ -130,12 +168,25 @@ println('Sequential #2: ' + Timing.millis { fmax.doSequential(); });
 assert(fmax.max == fmax.doSequential());
 println();
 
-def fr2 = new FillRandom(lower: 0, upper: 100_000, indexable: new String[100_000],
-			 closure: { -> return RandomString.next(ThreadLocalRandom.current(), 20); });
-println("Timing for random strings");
+def strArray = new String[100_000];
+def fr2 = new FJFill(lower: 0, upper: strArray.length, indexable: strArray,
+		     closure: { int i -> return RandomString.next(ThreadLocalRandom.current(), 20); });
+println("***** Timing for random strings *****");
 println('Parallel #1: ' + Timing.millis { pool.invoke(new FJTask(fr2, 1000)); });
 println('Parallel #2: ' + Timing.millis { pool.invoke(new FJTask(fr2, 1000)); });
 println('Parallel #3: ' + Timing.millis { pool.invoke(new FJTask(fr2, 1000)); });
 println('Parallel #4: ' + Timing.millis { pool.invoke(new FJTask(fr2, 1000)); });
 println('Sequential #1: ' + Timing.millis { fr2.doSequential(); });
 println('Sequential #2: ' + Timing.millis { fr2.doSequential(); });
+
+//Now use our versions of parallel arrays, groovy style
+println();
+println("***** Now try a groovier version *****");
+int max;
+long myTime = Timing.millis {
+  max = intArray.myParallelFill(randomInt).myParallelMax(); };
+myTime = Timing.millis {
+  max = intArray.myParallelFill(randomInt).myParallelMax(); };
+myTime = Timing.millis {
+  max = intArray.myParallelFill(randomInt).myParallelMax(); };
+println("Populated array and found ${max} as max in ${myTime} millis");

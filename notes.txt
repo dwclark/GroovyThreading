@@ -6,7 +6,7 @@ General Notes
 
 3) Multi-threaded programming is very succeptible to Heisenbugs, bugs that disappear once you add instrumentation or attach a debugger.  Be prepared to do more thinking and less exploring with multi-threaded programming.
 
-4) Read Java Concurrency in Practice by Brian Goetz.  Then read it again.  Knowing the Java Memory Model dispels a lot of the mystery in best practices for concurrent Java program.
+4) Read Java Concurrency in Practice by Brian Goetz.  Then read it again.  Knowing the Java Memory Model dispels a lot of the mystery in best practices for concurrent Java programs.
 
 5) There is a lot of overlap in what each strategy can provide, and sometimes it is not obvious which strategy you should choose.  For example the Integrate class could have easily been written using parallel collections, even though I used dataflow variables.  But, things are not always interchangable, using Actors for the Integrate class would probably be a bad idea.
 
@@ -46,12 +46,32 @@ Actors
 
 8) Recursive problems can be modelled using actors using a Manager/Worker design where the master maintains a stack for managing state.
 
+Fork/Join
+
+1) Newest concurrency framework for Java.  The Fork/Join framework was developed as part of the JSR 166y project.  However, only part of the 166y code made it into JDK 7.  The reason for this is that a lot of the Fork/Join framework is VERY awkward to use without lambdas, and lambdas didn't ship with JDK 7, therefore a lot didn't make it in.
+
+2) However, since Groovy has closures, the complete 166y framework makes sense inside of Groovy right now.  Because of this, the GPars people included the full 166y framework inside of GPars.
+
+3) Most concurrency frameworks are built around speeding up course grained tasks that have lots of I/O.  Because most of the time is spent in I/O, there isn't much problem with threading and synchronization overhead swamping run times.  The previous JDK 5 threading improvements, such as Executors and Futures, work really well in this kind of environment.
+
+4) However, compute intensive operations can very easily be swamped by threading and concurrency overhead in concurrency frameworks designed with I/O and long running tasks in mind.  Fork/Join is built to minimize overhead for these types of compute intensive tasks.
+
+5) Fork/Join is useful when the following hold for your code:
+   1. You are dealing with large datasets
+   2. The design constraints of Fork/Join are kept (no I/O, no synchronization)
+   3. The code is on a hot path in your application (otherwise hotspot will not speed it up)
+   4. The code is run in server mode (client mode usually disables hotspot)
+
 Parallel Collections/Arrays
 
 1) Are probably the simplest to understand of all the concurrency frameworks inside GPars.
 
 2) However, the parallel operations are not a panacea.  Under real world conditions, it's easily possible that parallel algorithms will perform worse than serial algorithms.  For example, if you are trying to sort a list with a couple thousand items in it, don't even bother with parallel collections.  By the time a parallel algorithm can set up its machinery and divide up the work, the serial algorithm will be done.
 
-3) If performance is your primary consideration in using parallel collections/arrays, you will probably need a good understanding of your problem domain and a good understanding of the underlying Fork/Join machinery to get optimal performance.  However, this is the future of high performance java.  Because Java doesn't have lambdas, the Fork/Join framework is not that useful inside of Java 7.  However, because closures are lambdas, you can do the stuff slated for Java 8 right now inside of Groovy.
+3) If performance is your primary consideration in using parallel collections/arrays, you will probably need a good understanding of your problem domain and a good understanding of the underlying Fork/Join machinery to get optimal performance.
 
-4) Still good for some operations.  For example, if you have a series of operations you want to run in parallel and block until they are complete, it's a lot easier to run them inside of eachParallel or collectParallel than it is to bother with Runnables, Callables, Futures, etc.
+4) The timing experiments I have done seem to show that the convenience parallel collection classes (such as findAllParallel) don't buy you much, and may even slow down your computations.  Still, they are easy enough to use and if your measurements indicate that they give you a performance boost, use them.
+
+5) However, if you really have a need for speed, you will most likely need to work with parallel arrays.  This is still very easy to do inside of groovy, the only real difference being the need to use more traditional functional programming names for the functionality you need (map and reduce instead of collect and inject, etc.).
+
+6) eachParallel is still useful as a way of executing tasks simultaneously while blocking on all results. This is much easier than starting threads and joining them or even using ExecutorService and Futures.  If you are doing I/O or synchronizing, use GParsExecutorsPool instead of GParsPool.

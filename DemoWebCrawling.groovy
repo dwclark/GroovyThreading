@@ -1,11 +1,11 @@
 import groovyx.gpars.dataflow.*;
-
-final def DONE = new Object();
+import static groovyx.gpars.dataflow.Dataflow.task;
+import static groovyx.gpars.dataflow.operator.PoisonPill.instance as DONE;
 
 def announceForProcessing = new DataflowBroadcast();
 def readAfterProcessing = announceForProcessing.createReadChannel();
 
-def announceDownloads = new DataflowBroadCast();
+def announceDownloads = new DataflowBroadcast();
 def readDownloadsForSave = announceDownloads.createReadChannel();
 def readDownloadsForAnalysis = announceDownloads.createReadChannel();
 
@@ -17,41 +17,52 @@ def readAnalysis = announceAnalysis.createReadChannel();
 
 def outputFolder = new File('/home/david/tmp/ProcessUrls');
 
+//utilities
+static whileNotDone(def channel, def closure) {
+  def var;
+  while(!(var = channel.val).is(DONE)) {
+    closure(var);
+  }
+}
+
 //process the configuration file
 task {
   new File(args[0]).eachLine { line ->
-    announceForProcessing << line; };
-  announceForProcessing << DONE;
-};
+    announceForProcessing << line.trim(); };
+  announceForProcessing << DONE; };
+
+//Separate download task made because nesting tasks inside of other
+//tasks can lead to variables clobbering each other.  Breaking nested
+//task creation into separate functions solves this problem by making
+//variables immutable (since they are now bound to the function parameters).
+def makeDownloadTask(final def announceChannel, final def url) {
+  return task {
+    def download = url.toURL().text;
+    announceChannel << new MapPair(key: url, value: download); }; };
 
 //download the files
 task {
-  def toProcess = readAfterProcessing.val;
-  def allDownloads = [];
-  while(!toProcess.is(DONE)) {
-    allDownloads += task { announceDownloads << new MapPair(toProcess, toProcess.toURL().text); };
-    toProcess = readAfterProcessing.val;
-  }
+  //def url;
+  def all = [];
+  def doStuff = { url -> all.add(makeDownloadTask(announceDownloads, url)); };
 
-  allDownloads*.join();
+  whileNotDone(readAfterProcessing, doStuff);
+  all.each { def val = it.val; };
   announceDownloads << DONE; };
 
 //save the files
-task { 
-  def toSave = readDownloadsForSave.val;
-  while(!toSave.is(DONE)) {
-    def target = File.createTempFile('', '.html', outputFolder);
-    target.withWriter { writer << toSave.value; };
-    announceSave << new MapPair(toSave.key, target);
-    toSave = readDownloadsForSave.val;
-  }
+task {
+  def doStuff = { toSave ->
+    def target = File.createTempFile('groovy', '.html', outputFolder);
+    target.withWriter { writer -> writer.write(toSave.value); };
+    announceSave << new MapPair(key: toSave.key, value: target); };
 
+  whileNotDone(readDownloadsForSave, doStuff);
   announceSave << DONE; };
 
 //analyze the files
 task {
-  def toAnalyze = readDownloadsForAnalysis.val;
-  while(!toAnalyze.is(DONE)) {
+  def doStuff = { toAnalyze ->
     def txt = toAnalyze.value.toLowerCase();
     def indexes = [];
     def nextIndex = txt.indexOf('groovy');
@@ -59,34 +70,25 @@ task {
       indexes += nextIndex;
       nextIndex = txt.indexOf('groovy', nextIndex+1);
     }
+    
+    announceAnalysis << new MapPair(key: toAnalyze.key, value: indexes); };
 
-    announceAnalysis << new MapPair(toAnalyze.key, indexes);
-  }
-
+  whileNotDone(readDownloadsForAnalysis, doStuff);
   announceAnalysis << DONE; };
 
 def finish = task {
-  def allAnalysis = [];
-  def allFiles = [];
+  def allAnalysisPairs = [];
+  whileNotDone(readAnalysis, { pair -> allAnalysisPairs += pair; });
 
-  def analysis = readAnalysis.val;
-  while(!analysis.is(DONE)) {
-    allAnalysis += analysis;
-    analysis = readAnalysis.val;
-  }
-  
-  //analysis is complete, write everything
   def analysisFile = new File(outputFolder, 'analysis.csv');
   def newline = System.getProperty('line.separator');
+
   analysisFile.withWriter { writer ->
-    def savedFile = readSave.val;
-    while(!savedFile.is(DONE)) {
-      analysis = allAnalysis.find { a -> a.key == savedFile.key; };
-      def entries = [ savedFile.key, savedFile.value, a.value ];
+    def doStuff = { filePair ->
+      def analysisPair = allAnalysisPairs.find { analysisPair -> analysisPair.key == filePair.key; };
+      def entries = [ filePair.key, filePair.value.path, analysisPair.value ];
       def line = entries.collect { entry -> "\"${entry}\""; }.join(',');
-      writer << line + newline;
-      savedFile = readSave.val;
-    } };
-};
+      writer << line + newline; };
+    whileNotDone(readSave, doStuff); }; };
 
 finish.join();

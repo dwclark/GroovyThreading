@@ -18,11 +18,23 @@ def readAnalysis = announceAnalysis.createReadChannel();
 def outputFolder = new File('/home/david/tmp/ProcessUrls');
 
 //utilities
+//abstracts common idiom of waiting until DONE is received
 static whileNotDone(def channel, def closure) {
   def var;
   while(!(var = channel.val).is(DONE)) {
     closure(var);
   }
+}
+
+//can be used as a substitute for task calls if debugging is needed
+static l_task(def closure) {
+  task {
+    try {
+      closure();
+    }
+    catch(Throwable t) {
+      println(t);
+    } };
 }
 
 //process the configuration file

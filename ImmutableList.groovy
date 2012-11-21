@@ -1,5 +1,9 @@
 import groovy.transform.Immutable;
 
+//Note, this is not a true value type.  The data field 
+//will not be used to compute the hash code, nor in the equals method.
+//I'm mainly using the @Immutable annotation to be lazy.
+
 @Immutable public class ImmutableList {
 
   private final data;

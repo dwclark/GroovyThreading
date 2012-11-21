@@ -2,6 +2,7 @@ import java.net.*;
 import groovy.transform.Immutable;
 import groovyx.gpars.actor.*;
 
+//messages for communication between manager and workers
 class SendThread {
   public SendThread(final Thread thread) {
     this.thread = thread;
@@ -21,6 +22,9 @@ class HandleRequest {
 @Immutable class FinishedRequest { }
 @Immutable class Shutdown { }
 
+//WorkerManager class.  Manages processing of requests and
+//allocation of actors.  Leaves all request handling logic
+//to the workers
 class WorkerManager extends DynamicDispatchActor {
   final Stack freeWorkers = new Stack();
   final List inUseWorkers = [];
@@ -67,6 +71,10 @@ class WorkerManager extends DynamicDispatchActor {
   }
 }
 
+//Handles a request for a file.  Obviously should be
+//made much more robust in returning proper response
+//headers, mime/types, etc., but the basic idea should be
+//clear enough
 class RequestHandler extends DefaultActor {
   final File baseDir;
   
@@ -129,6 +137,12 @@ class RequestHandler extends DefaultActor {
   }
 }
 
+//Sets up the main server thread.  The main server only
+//listens for connections and then passes the socket off
+//to the workers and managers.  Shut down is handled via
+//interruption of the main server thread.  accept() is not
+//subject to interruption, so we put a timeout to check
+//for interruption before resuming wait in accept().
 def runServer(int port, WorkerManager manager) {
   def serverSocket = new ServerSocket(port);
   serverSocket.soTimeout = 500;
@@ -148,7 +162,8 @@ def runServer(int port, WorkerManager manager) {
   return thread;
 }
 
+//Set up main server and then wait for clean shutdown
 WorkerManager manager = new WorkerManager(new File(args[0]));
 manager.start();
 runServer(8080, manager).join();
-manager.join();
+manager.join();xs

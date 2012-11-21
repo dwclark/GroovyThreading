@@ -166,4 +166,4 @@ def runServer(int port, WorkerManager manager) {
 WorkerManager manager = new WorkerManager(new File(args[0]));
 manager.start();
 runServer(8080, manager).join();
-manager.join();xs
+manager.join();

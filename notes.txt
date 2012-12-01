@@ -1,6 +1,38 @@
+Motivations for Multi Threaded/Concurrent Programs
+
+1) Does anyone have a single processor system anymore?
+
+2) Free lunch is over.  Processors have traditionally gotten faster because of higher clock speeds, exotic optimizations (branch prediction, instruction reordering, pipelining, etc.), and bigger on die caches.  Of those three, only bigger on die caches will likely continue to improve.
+
+3) But, Moore's law is still active and on die transistor counts continue to improve...and the engineers need to stick them somewhere.  This is what leads to higher and higher core counts.
+
+4) A lot of this processing power can be utilized by email servers, web servers, and database servers.  We can run our code inside those environments and take advantage of concurrency there.  However, these only provide a course grained level of concurrency and force a particular execution model onto an application.  Code must execute in response to an email, a web request, or a query.  If an application needs finer grained concurrency or a different execution model, you need to roll your own.
+
+Multi-Threading on the JVM
+
+1) Java has had a threading story since Java 1.0 and was really ahead of its time at that point.
+
+2) However, the original designers did make a few mistakes at the time such as making every object a lock, making Runnable return void, broken memory model, synchronizing too many classes by default, etc.  Still, it was better than anything else out there.
+
+3) The original threading libraries provided basic tools, but not much in the way of guidance.  It was the equivalent of rolling your own Death Star with a bucket of generic Legos.
+
+4) Things gradually began to improve over time and eventually JDK 5 fixed most of the original problems with Java threading.
+
+5) Groovy and GPars build on the JDK 5 library support.  Building applications with GPars and Groovy is more like assembling a Death Star from a Death Star Lego kit.
+
+What has changed?
+
+1) Less manual thread creation in JDK 5 and in GPars
+
+2) Much less manual synchronization, for the most part this should be handled by the framework
+
+3) Much more emphasis on immutability if at all possible.  Immutable data/code == threading is easy.
+
+4) When immutability is not possible, the emphasis is on isolating mutability.  GPars provides several ways of managing mutation without explicit synchronization.
+
 General Notes
 
-1) Immutability is a huge win for mulit-threaded and concurrent programming.  Anything that can be made immutable should be made immutable.
+1) Immutability is a huge win for multi-threaded and concurrent programming.  Anything that can be made immutable should be made immutable.
 
 2) Even things that may not appear immutable, may be amenable to being made immutable.  In my initial version of the Integrate class, I used a mutable variable that caused a nasty race condition in the code.  Thinking a little harder, it was possible to replace the mutable variable with a computation done in each loop.  Had I made everything immutable, I would have never seen this problem and I would have saved some serious debugging time.
 
@@ -10,29 +42,39 @@ General Notes
 
 5) There is a lot of overlap in what each strategy can provide, and sometimes it is not obvious which strategy you should choose.  For example the Integrate class could have easily been written using parallel collections, even though I used dataflow variables.  But, things are not always interchangable, using Actors for the Integrate class would probably be a bad idea.
 
-6) Performance in multi-threaded programming can be frustrating.  Often serial programs can perform better than well-designed parallel programs in real world situations.
+6) Performance in multi-threaded programming can be frustrating.  Often serial programs can perform better than well-designed parallel programs in real world situations.  Your intuitions may be very wrong and threading overhead can add up quickly if you are not careful.
 
 7) Because of this, using something like GPars should probably mostly be motivated by considerations of good program design and allowing for clean and maintainable code.
 
-Immutability Notes
+8) Utility code: Interrupts.groovy and Timing.groovy
+
+Immutability Notes (ImmutableList.groovy)
 
 1) Lots of things that seem to need mutability really don't.  See for example the ImmutableList.  It has both add and remove functionality, but nothing ever changes.
 
 2) Groovy programmers can learn a lot from Scala and Clojure programmers in what can be immutable.
 
-Dataflow Variables
+Fire and Forget Concurrency (DemoThreadCreate.groovy and DemoAsynchronous.groovy)
 
-1) Are a simplification of Java Futures
+1) Often times concurrency is just a matter of running lots of independent tasks in parallel.  If you do not need to coordinate tasks or synchronize data, multi-threading becomes a lot easier.
+
+2) You can "fire and forget" in Groovy quite easily because of Thread.start will run a closure asynchronously without much work.
+
+3) However, if you are doing this often, you want to consider using a thread pool.  GParsExecutorsPool.withPool and GParsExecutorsPool.withExistingPool can help you do this easily.
+
+Dataflow Variables (DemoIntegrate.groovy and DemoWebCrawling.groovy)
+
+1) Are a simplification and significant enhancement of Java Futures
 
 2) Are excellent for when tasks have complex dependencies, but still need to be parallelized.  They can really help keep code robust.  Hard coding dependencies leads to brittle and hard to manage code.  It's better to code things as simple tasks and let the dataflow framework work out the dependencies automatically.
 
 3) The main idea is that dataflow variables can only be written to once, but read from many times.  All reads block until the variable is written to.
 
-Actors
+Actors (DemoEachFileParallel.groovy and DemoWebServer.groovy)
 
 1) Are great at managing tasks independently of threads.  For example, you might have many times more actors being run than there are threads in the underlying pool.
 
-2) Are excellent a modelling problems that can be thought of as Master/Slave or Manager/Workers problems.
+2) Are excellent at modelling problems that can be thought of as Master/Slave or Manager/Workers problems.
 
 3) Provide isolated mutability by forcing actors to interact with each other by passing messages.  Each actor can maintain as much mutable state as they want, but that mutable state should not be shared with other actors, unless done by message passing.
 
@@ -46,7 +88,7 @@ Actors
 
 8) Recursive problems can be modelled using actors using a Manager/Worker design where the master maintains a stack for managing state.
 
-Fork/Join
+Fork/Join (DemoForkJoin.groovy)
 
 1) Newest concurrency framework for Java.  The Fork/Join framework was developed as part of the JSR 166y project.  However, only part of the 166y code made it into JDK 7.  The reason for this is that a lot of the Fork/Join framework is VERY awkward to use without lambdas, and lambdas didn't ship with JDK 7, therefore a lot didn't make it in.
 
@@ -62,7 +104,7 @@ Fork/Join
    3. The code is on a hot path in your application (otherwise hotspot will not speed it up)
    4. The code is run in server mode (client mode usually disables hotspot)
 
-Parallel Collections/Arrays
+Parallel Collections/Arrays (DemoParallelEach.groovy and DemoParallelArrays.groovy)
 
 1) Are probably the simplest to understand of all the concurrency frameworks inside GPars.
 

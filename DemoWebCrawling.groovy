@@ -2,6 +2,10 @@ import groovyx.gpars.dataflow.*;
 import static groovyx.gpars.dataflow.Dataflow.task;
 import static groovyx.gpars.dataflow.operator.PoisonPill.instance as DONE;
 
+//Create broadcast channels.
+//Here we need one channel/task output and multiple channels for reading.  Each task
+//that reads from a channel needs it own read channel.
+
 def announceForProcessing = new DataflowBroadcast();
 def readAfterProcessing = announceForProcessing.createReadChannel();
 

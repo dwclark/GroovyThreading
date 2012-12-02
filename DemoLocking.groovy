@@ -1,4 +1,5 @@
 import groovy.transform.Immutable;
+import groovy.transform.Synchronized;
 import groovy.transform.WithReadLock;
 import groovy.transform.WithWriteLock;
 
@@ -22,12 +23,14 @@ public class BaseMap {
 }
 
 public class MapSynch extends BaseMap {
-  
-  public synchronized Object getAt(String key) {
+
+  @Synchronized
+  public Object getAt(String key) {
     return super.getAt(key);
   } 
 
-  public synchronized void putAt(String key, Object value) {
+  @Synchronized
+  public void putAt(String key, Object value) {
     super.putAt(key, value);
   }
 }
@@ -90,7 +93,7 @@ def printResults(final def tests) {
 
 final int NUM_PROCS = Runtime.getRuntime().availableProcessors();
 long SLEEP_TIME = 10_000;
-def sMap = new MapSynch();
+def sMap = new MapRwSynch();
 def sMapTests = (0..<(NUM_PROCS*3)).collect { new MapTester(sMap); };
 def sMapThreads = sMapTests.collect { MapTester.run(it); };
 sleep(SLEEP_TIME);

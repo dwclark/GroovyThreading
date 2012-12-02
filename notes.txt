@@ -16,7 +16,7 @@ Multi-Threading on the JVM
 
 3) The original threading libraries provided basic tools, but not much in the way of guidance.  It was the equivalent of rolling your own Death Star with a bucket of generic Legos.
 
-4) Things gradually began to improve over time and eventually JDK 5 fixed most of the original problems with Java threading.
+4) Things gradually began to improve over time and eventually JDK 5 fixed most of the original problems with Java threading.  Added better locks, atomics, Callable, futures, good memory model, not synchronizing by default.
 
 5) Groovy and GPars build on the JDK 5 library support.  Building applications with GPars and Groovy is more like assembling a Death Star from a Death Star Lego kit.
 

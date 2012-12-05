@@ -225,9 +225,16 @@ myTime = Timing.millis {
 myTime = Timing.millis {
   max = intArray.myParallelFill(randomInt).myParallelMax(); };
 println("Populated array and found ${max} as max in ${myTime} millis");
-println("Max string: " + strArray.myParallelFill(randomStr).myParallelMax());
+println();
 
+println("***** Now try a groovier version (with strings) *****");
+println("Max string: " + strArray.myParallelFill(randomStr).myParallelMax());
+println();
+
+println("***** Finally try myParallelFindAll with strings *****");
 println('Parallel Find All #1: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });
 println('Parallel Find All #2: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });
 println('Parallel Find All #3: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });
 println('Parallel Find All #4: ' + Timing.millis { strArray.myParallelFindAll { it.startsWith('zzz'); }; });
+println('Sequential Find All #1: ' + Timing.millis { strArray.findAll { it.startsWith('zzz'); }; });
+println('Sequential Find All #1: ' + Timing.millis { strArray.findAll { it.startsWith('zzz'); }; });

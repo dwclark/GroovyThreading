@@ -2,7 +2,12 @@ import java.security.MessageDigest;
 
 FileManager.installToFile();
 
-def dir = new File('/home/david/Development');
+if(args.length != 1) {
+  println('Please specify the search folder as an argument');
+  System.exit(0);
+}
+
+def dir = new File(args[0]);
 
 long size1 = 0;
 long time1 = Timing.millis { 

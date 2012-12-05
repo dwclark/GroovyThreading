@@ -19,7 +19,13 @@ def readSave = announceSave.createReadChannel();
 def announceAnalysis = new DataflowBroadcast();
 def readAnalysis = announceAnalysis.createReadChannel();
 
-def outputFolder = new File('/home/david/tmp/ProcessUrls');
+if(args.length != 2) {
+  println('Please specify the url file and the output folder');
+  System.exit(0);
+}
+
+def inputFile = new File(args[0]);
+def outputFolder = new File(args[1]);
 
 //utilities
 //abstracts common idiom of waiting until DONE is received
@@ -43,7 +49,7 @@ static l_task(def closure) {
 
 //process the configuration file
 task {
-  new File(args[0]).eachLine { line ->
+  inputFile.eachLine { line ->
     announceForProcessing << line.trim(); };
   announceForProcessing << DONE; };
 

@@ -1,4 +1,5 @@
 import groovy.transform.Immutable;
+import groovyx.gpars.*;
 
 @Immutable
 public class Email {
@@ -23,12 +24,43 @@ public class Email {
     final def to = rs.next(10) + '@' + rs.next(10) + '.com';
     return new Email(to: to, from: from, subject: subject, body: body);
   }
+
+  public static List fireAndTrack(List emails) {
+    def tracking;
+    GParsExecutorsPool.withPool {
+      tracking = emails.collect { email -> email.&send.callAsync(); }; };
+    return tracking;
+  }
+
+  public static List fireAndTrack(final def pool, List emails) {
+    def tracking;
+    GParsExecutorsPool.withExistingPool(pool) {
+      tracking = emails.collect { email -> email.&send.callAsync(); }; };
+    return tracking;
+  }
+
+  public static void fireAndForget(List emails) {
+    GParsExecutorsPool.withPool {
+      emails.each { email -> email.&send.callAsync(); }; };
+  }
+
+  public static List fireAndForget(final def pool, List emails) {
+    GParsExecutorsPool.withExistingPool(pool) {
+      emails.each { email -> email.&send.callAsync(); }; };
+  }
   
   public static void main(String[] args) {
-    final def body = "Fiona requests that you shower." +
-      sep + sep + "Right now!";
-    new Email(to: 'shrek@apple.com', from: 'me@gmail.com',
-	      subject: 'Please Shower', body: body).send();
-    random().send();
+    final def emails = (0..<50).inject([]) { list, i -> list += random(); list; };
+
+    //send without specifying pool
+    fireAndForget(emails);
+    final def tracking = fireAndTrack(emails);
+    final def results = tracking*.get();
+
+    final def pool = GParsExecutorsPool.createPool();
+    fireAndForget(pool, emails);
+    final def pooledTracking = fireAndTrack(pool, emails);
+    final def pooledResults = pooledTracking*.get();
+    pool.shutdown();
   }
 }

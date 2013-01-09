@@ -19,3 +19,12 @@ http://gpars.codehaus.org/
 http://www.chevron.com/
 http://www.ford.com/
 http://news.cnet.com/
+http://www.dzone.com/links/index.html
+http://groovy.dzone.com/
+http://www.realclearpolitics.com/?state=nwa
+http://www.drudgereport.com/
+http://www.democraticunderground.com/
+http://www.redstate.com/
+http://www.gradle.org/
+
+

@@ -93,10 +93,14 @@ def printResults(final def tests) {
 
 final int NUM_PROCS = Runtime.getRuntime().availableProcessors();
 long SLEEP_TIME = 10_000;
-def sMap = new MapSynch();
-def sMapTests = (0..<(NUM_PROCS*3)).collect { new MapTester(sMap); };
-def sMapThreads = sMapTests.collect { MapTester.run(it); };
-sleep(SLEEP_TIME);
-sMapThreads.each { it.interrupt(); };
-sMapThreads.each { it.join(); };
-printResults(sMapTests);
+
+[  'Single Lock': new MapSynch(), 'Read/Write Locks': new MapRwSynch() ].each {
+  title, theMap ->
+    def mapTests = (0..<(NUM_PROCS*3)).collect { new MapTester(theMap); };
+    def mapThreads = mapTests.collect { MapTester.run(it); };
+    sleep(SLEEP_TIME);
+    mapThreads.each { it.interrupt(); };
+    mapThreads.each { it.join(); };
+    println(); println();
+    println("***** ${title} *****");
+    printResults(mapTests); };

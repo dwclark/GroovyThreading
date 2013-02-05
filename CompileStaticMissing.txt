@@ -1,0 +1,227 @@
+Bytecode of calculateDelta method:
+
+invokestatic #24 = Method Integrate.$getCallSiteArray(()[Lorg/codehaus/groovy/runtime/callsite/CallSite;)
+astore 5
+invokestatic #40 = Method org.codehaus.groovy.runtime.BytecodeInterface8.isOrigInt(()Z)
+ifeq 32
+invokestatic #43 = Method org.codehaus.groovy.runtime.BytecodeInterface8.isOrigD(()Z)
+ifeq 32
+getstatic #45 = Field Integrate.__$stMC(Z)
+ifne 32
+invokestatic #48 = Method org.codehaus.groovy.runtime.BytecodeInterface8.disabledStandardMetaClass(()Z)
+ifne 32
+goto 72
+aload 5
+ldc #49 = int 0
+aaload
+aload 5
+ldc #50 = int 1
+aaload
+dload_2
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+dload_0
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+iload 4
+invokestatic #67 = Method java.lang.Integer.valueOf((I)Ljava/lang/Integer;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+invokestatic #73 = Method org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation.doubleUnbox((Ljava/lang/Object;)D)
+dreturn
+goto 80
+dload_2
+dload_0
+dsub
+iload 4
+i2d
+ddiv
+dreturn
+ldc #49 = int 0
+i2d
+dreturn
+
+
+Bytecode of rectangular method:
+
+invokestatic #24 = Method Integrate.$getCallSiteArray(()[Lorg/codehaus/groovy/runtime/callsite/CallSite;)
+astore 6
+dconst_0
+dstore 7
+invokestatic #43 = Method org.codehaus.groovy.runtime.BytecodeInterface8.isOrigD(()Z)
+ifeq 29
+getstatic #45 = Field Integrate.__$stMC(Z)
+ifne 29
+invokestatic #48 = Method org.codehaus.groovy.runtime.BytecodeInterface8.disabledStandardMetaClass(()Z)
+ifne 29
+goto 69
+aload 6
+ldc #81 = int 2
+aaload
+ldc #2 = Class Integrate
+dload_0
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+dload_2
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+iload 4
+invokestatic #67 = Method java.lang.Integer.valueOf((I)Ljava/lang/Integer;)
+invokeinterface #85 = Method org.codehaus.groovy.runtime.callsite.CallSite.callStatic((Ljava/lang/Class;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+astore 9
+aload 9
+invokestatic #73 = Method org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation.doubleUnbox((Ljava/lang/Object;)D)
+dstore 7
+aload 9
+pop
+goto 85
+dload_0
+dload_2
+iload 4
+invokestatic #87 = Method Integrate.calculateDelta((DDI)D)
+dstore 10
+dload 10
+dstore 7
+dload 10
+pop2
+dconst_0
+dstore 12
+invokestatic #43 = Method org.codehaus.groovy.runtime.BytecodeInterface8.isOrigD(()Z)
+ifeq 109
+getstatic #45 = Field Integrate.__$stMC(Z)
+ifne 109
+invokestatic #48 = Method org.codehaus.groovy.runtime.BytecodeInterface8.disabledStandardMetaClass(()Z)
+ifne 109
+goto 122
+dload_0
+dstore 14
+dload 14
+dstore 12
+dload 14
+pop2
+goto 132
+dload_0
+dstore 16
+dload 16
+dstore 12
+dload 16
+pop2
+dconst_0
+dstore 18
+dload 18
+pop2
+invokestatic #40 = Method org.codehaus.groovy.runtime.BytecodeInterface8.isOrigInt(()Z)
+ifeq 165
+invokestatic #90 = Method org.codehaus.groovy.runtime.BytecodeInterface8.isOrigZ(()Z)
+ifeq 165
+getstatic #45 = Field Integrate.__$stMC(Z)
+ifne 165
+invokestatic #48 = Method org.codehaus.groovy.runtime.BytecodeInterface8.disabledStandardMetaClass(()Z)
+ifne 165
+goto 297
+iconst_0
+istore 20
+iload 20
+pop
+iload 20
+invokestatic #67 = Method java.lang.Integer.valueOf((I)Ljava/lang/Integer;)
+iload 4
+invokestatic #67 = Method java.lang.Integer.valueOf((I)Ljava/lang/Integer;)
+invokestatic #96 = Method org.codehaus.groovy.runtime.ScriptBytecodeAdapter.compareLessThan((Ljava/lang/Object;Ljava/lang/Object;)Z)
+ifeq 294
+aload 6
+ldc #97 = int 3
+aaload
+dload 18
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+aload 6
+ldc #98 = int 4
+aaload
+aload 6
+ldc #99 = int 5
+aaload
+aload 5
+dload 12
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+dload 7
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+dup
+invokestatic #73 = Method org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation.doubleUnbox((Ljava/lang/Object;)D)
+dstore 18
+pop
+aload 6
+ldc #100 = int 6
+aaload
+dload 12
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+dload 7
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+dup
+invokestatic #73 = Method org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation.doubleUnbox((Ljava/lang/Object;)D)
+dstore 12
+pop
+iload 20
+aload 6
+ldc #101 = int 7
+aaload
+swap
+invokestatic #67 = Method java.lang.Integer.valueOf((I)Ljava/lang/Integer;)
+invokeinterface #104 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;)Ljava/lang/Object;)
+dup
+invokestatic #108 = Method org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation.intUnbox((Ljava/lang/Object;)I)
+istore 20
+pop
+goto 171
+goto 392
+iconst_0
+istore 21
+iload 21
+pop
+iload 21
+iload 4
+if_icmpge 314
+iconst_1
+goto 315
+iconst_0
+ifeq 392
+aload 6
+ldc #109 = int 8
+aaload
+dload 18
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+aload 6
+ldc #110 = int 9
+aaload
+aload 6
+ldc #111 = int 10
+aaload
+aload 5
+dload 12
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+dload 7
+invokestatic #56 = Method java.lang.Double.valueOf((D)Ljava/lang/Double;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+invokeinterface #62 = Method org.codehaus.groovy.runtime.callsite.CallSite.call((Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;)
+dup
+invokestatic #73 = Method org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation.doubleUnbox((Ljava/lang/Object;)D)
+dstore 18
+pop
+dload 12
+dload 7
+dadd
+dup2
+dstore 12
+pop2
+iload 21
+iconst_1
+iadd
+dup
+istore 21
+pop
+goto 303
+dload 18
+dreturn
+ldc #49 = int 0
+i2d
+dreturn

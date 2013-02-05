@@ -54,7 +54,7 @@ GParsPool.withPool {
 	   Timing.nanos { zzzListPA = pary.withFilter(opsFilter); });
   o.format("Parallel Arrays #3: %,19d\n", 
 	   Timing.nanos { zzzListPA = pary.withFilter(opsFilter); });
-  o.format("Parallel Arrays #1: %,19d\n",
+  o.format("Parallel Arrays #4: %,19d\n",
 	   Timing.nanos { zzzListPA = pary.withFilter(opsFilter); });
   paSize = zzzListPA.size(); };
   

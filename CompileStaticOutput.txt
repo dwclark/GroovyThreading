@@ -1,0 +1,72 @@
+With @CompileStatic on Integrate class
+
+Bytecode of calculateDelta method:
+
+dload_2
+dload_0
+dsub
+iload 4
+i2d
+ddiv
+dreturn
+ldc #45 = int 0
+i2d
+dreturn
+
+
+Bytecode of rectangular method:
+
+dload_0
+dload_2
+iload 4
+invokestatic #49 = Method Integrate.calculateDelta((DDI)D)
+dstore 6
+dload 6
+pop2
+dload_0
+dstore 8
+dload 8
+pop2
+dconst_0
+dstore 10
+dload 10
+pop2
+iconst_0
+istore 12
+iload 12
+pop
+iload 12
+iload 4
+if_icmpge 41
+iconst_1
+goto 42
+iconst_0
+ifeq 84
+dload 10
+aload 5
+dload 8
+invokeinterface #55 = Method SingleFunc.call((D)D)
+dload 6
+dmul
+dadd
+dup2
+dstore 10
+pop2
+dload 8
+dload 6
+dadd
+dup2
+dstore 8
+pop2
+iload 12
+iconst_1
+iadd
+dup
+istore 12
+pop
+goto 30
+dload 10
+dreturn
+ldc #45 = int 0
+i2d
+dreturn

@@ -6,12 +6,14 @@ import static groovyx.gpars.dataflow.Dataflow.task;
 public class Integrate {
   
   @CompileStatic
-  public static double calculateDelta(final double lower, final double upper, final int steps) {
+  public static double calculateDelta(final double lower, final double upper,
+				      final int steps) {
     return (upper - lower) / steps;
   }
 
   @CompileStatic
-  public static double rectangular(final double lower, final double upper, final int steps, final SingleFunc func) {
+  public static double rectangular(final double lower, final double upper,
+				   final int steps, final SingleFunc func) {
     final double delta = calculateDelta(lower, upper, steps);
     double nextLower = lower;
     double sum = 0.0d;
@@ -24,7 +26,8 @@ public class Integrate {
   }
 
   @CompileStatic
-  public static double trapezoidal(final double lower, final double upper, final int steps, final SingleFunc func) {
+  public static double trapezoidal(final double lower, final double upper,
+				   final int steps, final SingleFunc func) {
     final double delta = calculateDelta(lower, upper, steps);
     double nextLower = lower;
     double sum = 0.0d;
@@ -81,10 +84,14 @@ public class Integrate {
 	  execute(myLower, myLower + intervalSize, intervalSteps, func, strategy); };
 	return list; };
       
+      //Handle last interval separately.  The final interval may be a different
+      //size than the previous intervals because of rounding errors.  Make sure
+      //intregration ends exactly at upper boundary.
       listVars += task {
 	final double myLower = lower + ((numTasks - 1) * intervalSize);
 	final int myNumSteps = totalSteps - (intervalSteps * (numTasks - 1));
 	execute(myLower, upper, myNumSteps, func, strategy); };
+
       return listVars.sum { it.val; }; };
   }
 
